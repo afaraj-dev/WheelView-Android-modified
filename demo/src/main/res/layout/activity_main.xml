@@ -16,9 +16,9 @@
             android:id="@+id/wheelview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:lwvCursorSize="10dp"
-            app:lwvHighlightColor="#31B1E6"
-            />
+            android:padding="8dp"
+            app:wpCursorSize="10dp"
+            app:wpHighlightColor="#31B1E6" />
 
         <com.view.picker.HorizontalWheelPicker
             android:id="@+id/wheelview2"
@@ -26,8 +26,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@android:color/white"
-            app:lwvHighlightColor="#7CD717"
-            app:lwvIntervalFactor="1.1" />
+            app:wpHighlightColor="#7CD717"
+            app:wpIntervalFactor="1"
+            app:wpItemNormalTextSize="25dp"
+            app:wpItemSelectedTextSize="20dp"
+            app:wpTitleTextSize="32sp" />
 
         <com.view.picker.HorizontalWheelPicker
             android:id="@+id/wheelview3"
@@ -35,10 +38,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@android:color/white"
-            app:lwvHighlightColor="#31B1E6"
-            app:lwvIntervalFactor="1.3"
-            app:lwvMarkRatio="0.2"
-            app:lwvMarkTextColor="#919191" />
+            app:wpDrawHashMarks="true"
+            app:wpHighlightColor="#31B1E6"
+            app:wpIntervalFactor="1.3"
+            app:wpItemNormalTextColor="#919191"
+            app:wpItemNormalTextSize="12sp"
+            app:wpMarkRatio="0.2"
+            app:wpTitleTextColor="@color/colorPrimary" />
 
 
         <com.view.picker.HorizontalWheelPicker
@@ -47,10 +53,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:background="#222222"
-            app:lwvAdditionalCenterMark="元"
-            app:lwvCursorSize="15dp"
-            app:lwvMarkColor="#EEEEEE"
-            app:lwvMarkTextColor="#CACACA" />
+            app:wpAdditionalCenterMark="元"
+            app:wpCursorSize="15dp"
+            app:wpItemNormalTextColor="#CACACA"
+            app:wpMarkColor="#EEEEEE" />
 
         <com.view.picker.HorizontalWheelPicker
             android:id="@+id/wheelview5"
@@ -58,11 +64,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:background="#222222"
-            app:lwvAdditionalCenterMark="元"
-            app:lwvCenterMarkTextSize="14sp"
-            app:lwvHighlightColor="#31B1E6"
-            app:lwvMarkColor="#EEEEEE"
-            app:lwvMarkTextColor="#CACACA" />
+            app:wpAdditionalCenterMark="元"
+            app:wpHighlightColor="#31B1E6"
+            app:wpItemNormalTextColor="#CACACA"
+            app:wpItemSelectedTextSize="14sp"
+            app:wpMarkColor="#EEEEEE" />
 
         <TextView
             android:id="@+id/changed_tv"
