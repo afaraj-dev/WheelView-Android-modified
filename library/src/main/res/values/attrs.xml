@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<declare-styleable name="lwvWheelView">
-		<attr name="lwvHighlightColor" format="color|reference"/>
-		<attr name="lwvMarkColor" format="color|reference"/>
-		<attr name="lwvMarkTextColor" format="color|reference"/>
-		<attr name="lwvIntervalFactor" format="float"/>
-		<attr name="lwvMarkRatio" format="float"/>
-		<attr name="lwvCursorSize" format="dimension"/>
-		<attr name="lwvMarkTextSize" format="dimension"/>
-		<attr name="lwvCenterMarkTextSize" format="dimension"/>
-		<attr name="lwvAdditionalCenterMark" format="string|reference"/>
-	</declare-styleable>
+    <declare-styleable name="HorizontalWheelPicker">
+        <attr name="wpHighlightColor" format="color|reference" />
+        <attr name="wpMarkColor" format="color|reference" />
+        <attr name="wpMarkTextColor" format="color|reference" />
+        <attr name="wpIntervalFactor" format="float" />
+        <attr name="wpMarkRatio" format="float" />
+        <attr name="wpCursorSize" format="dimension" />
+        <attr name="wpMarkTextSize" format="dimension" />
+        <attr name="wpCenterMarkTextSize" format="dimension" />
+        <attr name="wpAdditionalCenterMark" format="string|reference" />
+    </declare-styleable>
 </resources>

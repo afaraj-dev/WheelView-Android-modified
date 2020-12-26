@@ -6,14 +6,14 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.lantouzi.wheelview.R;
-import com.lantouzi.wheelview.WheelView;
+import com.view.picker.HorizontalWheelPicker;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-	private WheelView mWheelView, mWheelView2, mWheelView3, mWheelView4, mWheelView5;
+	private HorizontalWheelPicker mWheelView, mWheelView2, mWheelView3, mWheelView4, mWheelView5;
 	private TextView mSelectedTv, mChangedTv;
 
 	@Override
@@ -86,14 +86,14 @@ public class MainActivity extends AppCompatActivity {
 		mSelectedTv.setText(String.format("onWheelItemSelected：%1$s", ""));
 		mChangedTv.setText(String.format("onWheelItemChanged：%1$s", ""));
 
-		mWheelView5.setOnWheelItemSelectedListener(new WheelView.OnWheelItemSelectedListener() {
+		mWheelView5.setOnWheelItemSelectedListener(new HorizontalWheelPicker.OnWheelItemSelectedListener() {
 			@Override
-			public void onWheelItemSelected(WheelView wheelView, int position) {
+			public void onWheelItemSelected(HorizontalWheelPicker wheelView, int position) {
 				mSelectedTv.setText(String.format("onWheelItemSelected：%1$s", wheelView.getItems().get(position)));
 			}
 
 			@Override
-			public void onWheelItemChanged(WheelView wheelView, int position) {
+			public void onWheelItemChanged(HorizontalWheelPicker wheelView, int position) {
 				mChangedTv.setText(String.format("onWheelItemChanged：%1$s", wheelView.getItems().get(position)));
 			}
 		});
