@@ -25,8 +25,10 @@ import androidx.core.view.ViewCompat;
 import com.view.picker.library.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Modified from https://github.com/lantouzi/WheelView-Android.
@@ -38,24 +40,28 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
 
     public static final int HIGHLIGHT_SP_SIZE = 35;
     public static final int NORMAL_SP_SIZE = 27;
+    public static final int TITLE_SP_SIZE = 20;
 
     private Paint mMarkPaint;
-    private TextPaint mMarkTextPaint;
+    private TextPaint mMarkTextPaint, mTitleTextPaint;
     private int mCenterIndex = -1;
 
-    private int mHighlightColor, mMarkTextColor;
+    private int mHighlightColor, mItemNormalTextColor, mTitleTextColor;
     private int mMarkColor, mFadeMarkColor;
 
-    private int mHeight;
+    private int mViewHeight;
+    private float mTitleTextHeight, mItemTextHeight;
     private List<String> mItems;
+    private final Map<Integer, String> mItemTitleMap = new HashMap<>();
     private String mAdditionCenterMark;
     private OnWheelItemSelectedListener mOnWheelItemSelectedListener;
     private float mIntervalFactor = DEFAULT_INTERVAL_FACTOR;
     private float mMarkRatio = DEFAULT_MARK_RATIO;
+    private boolean mDrawMarks = false;
 
     private int mMarkCount;
-    private Path mCenterIndicatorPath = new Path();
-    private float mCursorSize;
+    private final Path mCenterIndicatorPath = new Path();
+    private float mTopIndexHeight;
     private int mViewScopeSize;
 
     // scroll control args ---- start
@@ -63,8 +69,7 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
     private float mMaxOverScrollDistance;
     private RectF mContentRectF;
     private boolean mFling = false;
-    private float mCenterTextSize, mNormalTextSize;
-    private float mTopSpace, mBottomSpace;
+    private float mCenterTextSize, mNormalTextSize, mTitleTextSize;
     private float mIntervalDis;
     private float mCenterMarkWidth, mMarkWidth;
     private GestureDetectorCompat mGestureDetectorCompat;
@@ -90,50 +95,63 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
     }
 
     protected void init(AttributeSet attrs) {
-        float density = getResources().getDisplayMetrics().density;
         mCenterMarkWidth = 0;
         mMarkWidth = 0;
 
         mHighlightColor = 0xFF666666;
-        mMarkTextColor = 0x80666666;
+        mItemNormalTextColor = 0x80666666;
+        mTitleTextColor = 0x80999999;
         mMarkColor = 0xFFEEEEEE;
-        mCursorSize = 0;
-        mCenterTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+        mTopIndexHeight = 0;
+
+        mCenterTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
                 HIGHLIGHT_SP_SIZE, getResources().getDisplayMetrics());
-        ;
-        mNormalTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+
+        mNormalTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
                 NORMAL_SP_SIZE, getResources().getDisplayMetrics());
 
-        mBottomSpace = density * 6;
+        mTitleTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
+                TITLE_SP_SIZE, getResources().getDisplayMetrics());
 
-        TypedArray ta = attrs == null ? null : getContext().obtainStyledAttributes(attrs, R.styleable.lwvWheelView);
+        TypedArray ta = attrs == null ? null : getContext().obtainStyledAttributes(attrs, R.styleable.HorizontalWheelPicker);
         if (ta != null) {
             mHighlightColor = ta.getColor(R.styleable.HorizontalWheelPicker_wpHighlightColor, mHighlightColor);
-            mMarkTextColor = ta.getColor(R.styleable.HorizontalWheelPicker_wpMarkTextColor, mMarkTextColor);
+            mItemNormalTextColor = ta.getColor(R.styleable.HorizontalWheelPicker_wpItemNormalTextColor, mItemNormalTextColor);
             mMarkColor = ta.getColor(R.styleable.HorizontalWheelPicker_wpMarkColor, mMarkColor);
             mIntervalFactor = ta.getFloat(R.styleable.HorizontalWheelPicker_wpIntervalFactor, mIntervalFactor);
             mMarkRatio = ta.getFloat(R.styleable.HorizontalWheelPicker_wpMarkRatio, mMarkRatio);
             mAdditionCenterMark = ta.getString(R.styleable.HorizontalWheelPicker_wpAdditionalCenterMark);
-            mCenterTextSize = ta.getDimension(R.styleable.HorizontalWheelPicker_wpCenterMarkTextSize, mCenterTextSize);
-            mNormalTextSize = ta.getDimension(R.styleable.HorizontalWheelPicker_wpMarkTextSize, mNormalTextSize);
-            mCursorSize = ta.getDimension(R.styleable.HorizontalWheelPicker_wpCursorSize, mCursorSize);
+            mCenterTextSize = ta.getDimension(R.styleable.HorizontalWheelPicker_wpItemSelectedTextSize, mCenterTextSize);
+            mNormalTextSize = ta.getDimension(R.styleable.HorizontalWheelPicker_wpItemNormalTextSize, mNormalTextSize);
+            mTopIndexHeight = ta.getDimension(R.styleable.HorizontalWheelPicker_wpCursorSize, mTopIndexHeight);
+            mTitleTextSize = ta.getDimension(R.styleable.HorizontalWheelPicker_wpTitleTextSize, mTitleTextSize);
+            mDrawMarks = ta.getBoolean(R.styleable.HorizontalWheelPicker_wpDrawHashMarks, mDrawMarks);
+            mTitleTextColor = ta.getColor(R.styleable.HorizontalWheelPicker_wpTitleTextColor, mTitleTextColor);
             ta.recycle();
         }
         mNormalTextSize = Math.min(mNormalTextSize, mCenterTextSize);
         mFadeMarkColor = mHighlightColor & 0xAAFFFFFF;
         mIntervalFactor = Math.max(1, mIntervalFactor);
         mMarkRatio = Math.min(1, mMarkRatio);
-        mTopSpace = mCursorSize + density * 2;
 
         mMarkPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mMarkTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mMarkTextPaint.setTextAlign(Paint.Align.CENTER);
         mMarkTextPaint.setColor(mHighlightColor);
 
+        mTitleTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mTitleTextPaint.setTextAlign(Paint.Align.CENTER);
+        mTitleTextPaint.setTextSize(mTitleTextSize);
+        mTitleTextPaint.setColor(mTitleTextColor);
+        Paint.FontMetrics fm = mTitleTextPaint.getFontMetrics();
+        mTitleTextHeight = fm.descent - fm.ascent;
+
         mMarkPaint.setColor(mMarkColor);
         mMarkPaint.setStrokeWidth(mCenterMarkWidth);
 
         mMarkTextPaint.setTextSize(mCenterTextSize);
+        fm = mMarkTextPaint.getFontMetrics();
+        mItemTextHeight = fm.bottom - fm.top;
         calcIntervalDis();
 
         mScroller = new OverScroller(getContext());
@@ -146,14 +164,17 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
             for (int i = 0; i < 20; i++)
                 preview.add(String.format(Locale.ENGLISH, "%d", i));
             setItems(preview);
-            mAdditionCenterMark = "x";
+            mItemTitleMap.put(0, "have");
+            mItemTitleMap.put(1, "a");
+            mItemTitleMap.put(3, "nice");
+            mItemTitleMap.put(4, "day");
         }
 
         selectIndex(0);
     }
 
     /**
-     * calculate interval distance between items
+     * calculate distance between Interval Marks
      */
     private void calcIntervalDis() {
         if (mMarkTextPaint == null) {
@@ -205,7 +226,7 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
     private int measureHeight(int heightMeasure) {
         int measureMode = MeasureSpec.getMode(heightMeasure);
         int measureSize = MeasureSpec.getSize(heightMeasure);
-        int result = (int) (mBottomSpace + mCenterTextSize);
+        int result = (int) (getPaddingBottom() + mItemTextHeight + getPaddingTop() + mTitleTextHeight);
         switch (measureMode) {
             case MeasureSpec.EXACTLY:
                 result = Math.max(result, measureSize);
@@ -232,7 +253,7 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         if (w != oldw || h != oldh) {
-            mHeight = h;
+            mViewHeight = h;
             mMaxOverScrollDistance = w / 2.f;
             mContentRectF.set(0, 0, (mMarkCount - 1) * mIntervalDis, h);
             mViewScopeSize = (int) Math.ceil(mMaxOverScrollDistance / mIntervalDis);
@@ -242,16 +263,20 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        int top = getPaddingTop();
+        int bottom = getPaddingBottom();
 
         mCenterIndicatorPath.reset();
-        float sizeDiv2 = mCursorSize / 2f;
-        float sizeDiv3 = mCursorSize / 3f;
-        mCenterIndicatorPath.moveTo(mMaxOverScrollDistance - sizeDiv2 + getScrollX(), 0);
-        mCenterIndicatorPath.rLineTo(0, sizeDiv3);
-        mCenterIndicatorPath.rLineTo(sizeDiv2, sizeDiv2);
-        mCenterIndicatorPath.rLineTo(sizeDiv2, -sizeDiv2);
-        mCenterIndicatorPath.rLineTo(0, -sizeDiv3);
-        mCenterIndicatorPath.close();
+        if (mTopIndexHeight > 0) {
+            float sizeDiv2 = mTopIndexHeight / 2f;
+            float sizeDiv3 = mTopIndexHeight / 3f;
+            mCenterIndicatorPath.moveTo(mMaxOverScrollDistance - sizeDiv2 + getScrollX(), top);
+            mCenterIndicatorPath.rLineTo(0, sizeDiv3);
+            mCenterIndicatorPath.rLineTo(sizeDiv2, sizeDiv2);
+            mCenterIndicatorPath.rLineTo(sizeDiv2, -sizeDiv2);
+            mCenterIndicatorPath.rLineTo(0, -sizeDiv3);
+            mCenterIndicatorPath.close();
+        }
 
         mMarkPaint.setColor(mHighlightColor);
         canvas.drawPath(mCenterIndicatorPath, mMarkPaint);
@@ -271,68 +296,72 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
 
         float x = start * mIntervalDis;
 
-        float markHeight = mHeight - mBottomSpace - mCenterTextSize - mTopSpace;
+        float markHeight = mViewHeight - mCenterTextSize - top - bottom;
         // small scale Y offset
         float smallMarkShrinkY = markHeight * (1 - mMarkRatio) / 2f;
         smallMarkShrinkY = Math.min((markHeight - mMarkWidth) / 2f, smallMarkShrinkY);
 
         for (int i = start; i < end; i++) {
-            float tempDis = mIntervalDis / 5f;
+            float subMark = mIntervalDis / 5f;
             // offset: Small mark offset Big mark
-            for (int offset = -2; offset < 3; offset++) {
-                float ox = x + offset * tempDis;
-
-                if (i >= 0 && i <= mMarkCount && mCenterIndex == i) {
-                    int tempOffset = Math.abs(offset);
-                    if (tempOffset == 0) {
-                        mMarkPaint.setColor(mHighlightColor);
-                    } else if (tempOffset == 1) {
-                        mMarkPaint.setColor(mFadeMarkColor);
+            if (mDrawMarks) {
+                for (int offset = -2; offset < 3; offset++) {
+                    float subX = x + offset * subMark;
+                    if (i >= 0 && i <= mMarkCount && mCenterIndex == i) {
+                        int tempOffset = Math.abs(offset);
+                        if (tempOffset == 0) {
+                            mMarkPaint.setColor(mHighlightColor);
+                        } else if (tempOffset == 1) {
+                            mMarkPaint.setColor(mFadeMarkColor);
+                        } else {
+                            mMarkPaint.setColor(mMarkColor);
+                        }
                     } else {
                         mMarkPaint.setColor(mMarkColor);
                     }
-                } else {
-                    mMarkPaint.setColor(mMarkColor);
-                }
 
-//				if (offset == 0) {
-//					// center mark
-//					mMarkPaint.setStrokeWidth(mCenterMarkWidth);
-//					canvas.drawLine(ox, mTopSpace, ox, mTopSpace + markHeight, mMarkPaint);
-//				} else {
-//					// other small mark
-//					mMarkPaint.setStrokeWidth(mMarkWidth);
-//					canvas.drawLine(ox, mTopSpace + smallMarkShrinkY, ox, mTopSpace + markHeight - smallMarkShrinkY, mMarkPaint);
-//				}
+                    if (offset == 0) {
+                        // main hash mark
+                        mMarkPaint.setStrokeWidth(mCenterMarkWidth);
+                        canvas.drawLine(subX, getPaddingTop(), subX, top + markHeight, mMarkPaint);
+                    } else {
+                        // sub hash mark
+                        mMarkPaint.setStrokeWidth(mMarkWidth);
+                        canvas.drawLine(subX, top + smallMarkShrinkY, subX, top + markHeight - smallMarkShrinkY, mMarkPaint);
+                    }
+                }
             }
 
-            // mark text
+            // item text
+            float centerOffsetY = mCenterTextSize / 2f - mNormalTextSize / 2f;
             if (mMarkCount > 0 && i >= 0 && i < mMarkCount) {
                 CharSequence itemStr = mItems.get(i);
-
                 if (mCenterIndex == i) {
                     mMarkTextPaint.setColor(mHighlightColor);
-
+                    mMarkTextPaint.setTextSize(mCenterTextSize);
+                    Paint.FontMetrics fm = mMarkTextPaint.getFontMetrics();
                     if (!TextUtils.isEmpty(mAdditionCenterMark)) {
-                        //draw center mark
+                        //draw item with additional text
                         float additionalTextWidth = mMarkTextPaint.measureText(mAdditionCenterMark, 0, mAdditionCenterMark.length());
                         float itemWidth = mMarkTextPaint.measureText(itemStr, 0, itemStr.length());
-                        canvas.drawText(itemStr, 0, itemStr.length(), x - (additionalTextWidth) / 2, mHeight - mBottomSpace, mMarkTextPaint);
+                        canvas.drawText(itemStr, 0, itemStr.length(), x - (additionalTextWidth) / 2, mViewHeight - bottom - fm.descent, mMarkTextPaint);
                         mMarkTextPaint.setTextSize(mNormalTextSize);
-                        canvas.drawText(mAdditionCenterMark, x + itemWidth/2, mHeight - mBottomSpace, mMarkTextPaint);
+                        canvas.drawText(mAdditionCenterMark, x + itemWidth / 2, mViewHeight - bottom - fm.descent, mMarkTextPaint);
                     } else {
-                        //draw number
-                        mMarkTextPaint.setTextSize(mCenterTextSize);
-                        canvas.drawText(itemStr, 0, itemStr.length(), x, mHeight - mBottomSpace, mMarkTextPaint);
+                        //draw item
+                        canvas.drawText(itemStr, 0, itemStr.length(), x, mViewHeight - bottom - fm.descent, mMarkTextPaint);
                     }
                 } else {
-                    //draw non-highlighted text
-                    mMarkTextPaint.setColor(mMarkTextColor);
+                    //draw non-highlighted item
+                    mMarkTextPaint.setColor(mItemNormalTextColor);
                     mMarkTextPaint.setTextSize(mNormalTextSize);
-                    canvas.drawText(itemStr, 0, itemStr.length(), x, mHeight - mBottomSpace, mMarkTextPaint);
+                    Paint.FontMetrics fm = mMarkTextPaint.getFontMetrics();
+                    canvas.drawText(itemStr, 0, itemStr.length(), x, mViewHeight - bottom - centerOffsetY - fm.descent, mMarkTextPaint);
                 }
+                String title = mItemTitleMap.get(i);
+                if (title != null)
+                    canvas.drawText(title, x, mTitleTextHeight + top, mTitleTextPaint);
             }
-
             x += mIntervalDis;
         }
     }
@@ -487,6 +516,10 @@ public class HorizontalWheelPicker extends View implements GestureDetector.OnGes
         mCenterIndex = Math.min(mCenterIndex, mMarkCount);
         calcIntervalDis();
         invalidate();
+    }
+
+    public void setTitles(HashMap<Integer, String> itemTitleMap) {
+        mItemTitleMap.putAll(itemTitleMap);
     }
 
     public int getSelectedPosition() {
