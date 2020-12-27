@@ -1,4 +1,4 @@
-package com.lantouzi.wheelview.library;
+package com.lantouzi.wheelview;
 
 import org.junit.Test;
 
